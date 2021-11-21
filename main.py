@@ -489,5 +489,4 @@ while greater_loop == True: # Greater loop that enables a restart of the entire 
 
 
 
-:wq
 
