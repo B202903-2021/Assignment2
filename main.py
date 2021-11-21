@@ -490,3 +490,24 @@ while greater_loop == True: # Greater loop that enables a restart of the entire 
 
 
 
+
+
+
+################################################################################ Stage 2###########################################################################
+
+
+
+##### Multi sequence alignment using Clustero
+Cluster_YN = input("Initiate clustero multi alignment of protein sequences, Y/N")
+while YN(Cluster_YN) == False:
+   print("\n To carry out following protein analysis, multi-sequence allignment must be carried out, please initiate when ready: \n")
+   Cluster_YN = input("Initiate clustero Y/N : ")
+else:
+    cl_command = f"clustalo -t Protein -i {filter_input} -o {document_name}.msf -v --force"  # can add -maxnumseq = 1000 to limit the process
+    print("Aligning protien sequnces, generating file")
+    subprocess.call(cl_command, shell=True)
+    cl_command_phylo = f"clustalo -t Protein -i {filter_input} -o {document_name}.phy -v --force"  # can add -maxnumseq = 1000 to limit the process
+    print("\n Generating copy for phylogenetic analysis\n ")
+    subprocess.call(cl_command_phylo, shell = True)
+    print("Commencing next stage")
+
