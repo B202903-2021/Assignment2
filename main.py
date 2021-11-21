@@ -1,41 +1,3 @@
-#!/usr/bin/env python3
-#File called main.py
-import sys
-print("\n Imported sys\n")
-import os
-print("\n Imported os\n")
-import shutil
-print("\n Imported shutiln\n")
-
-#Import edirect module
-sys.path.insert(1, os.path.dirname(shutil.which('xtract')))
-import edirect
-print("\n Imported edirect\n")
-import subprocess
-print("\n Imported subprocess\n")
-import re
-
-from PIL import Image
-print("\n Imported Image\n")
-from os.path import exists # Check if the file exists
-print("\n Imported exists from os.path\n")
-import pandas as pd
-print("\n Imported pandas as pd \n")
-
-# global variables
-orig_stdout = sys.stdout
-
-######Tick List
-
-# All functions used at some point, except float check
-#The intial taxanomic search is robust,still somethings we can do
-#Expert mode, manually altering the variables : can break the script
-#Filter: Accesion is currently robust
-#Filter: Min or max is currently robust
-#Greater loop is complete. Restart can occurat each filter level as well as each module
-
-
-
 
 
 #esearch -db protein -query "Aves[organism] AND glucose-6-phosphatase[protein] NOT PARTIAL NOT PREDICTED" |efetch -db protein -format acc > file.txt
@@ -149,4 +111,72 @@ def count_species(fasta_input):
 
         return count
 
+
+
+########################### ###How many taxanomic groups you want to add, then loop through that many times, creating function to variable tax_input#######################################################
+Initiate_search = input("\n Would you like to initiate taxanomic search Y/N: ")
+while YN(Initiate_search) == False:
+    Initiate_search = input("\n Please initiate when ready Y/N:  ")
+
+else:
+    loop_var = False
+    while loop_var == False: #Allows the user to restart the process of eneteirng taxanomic and protein family parameters
+        # Ask the user for tax input
+        tax_input = input("\n Please enter taxonomic group: ") or "Aves"
+
+        print("\n Identifying Taxonomy ID for inputed taxonomic group \n")
+
+        # Loop until user inputs correct tax input, if there is no group present in the data base it will continue forever
+        while taxanomy_function(tax_input) == "":
+            tax_input = input("The taxanomic group you inputed is not available in the NCBI databse, please input again: ") or "Aves"
+            # prints the id code
+        else:
+            taxIDn = taxanomy_function(tax_input)
+            print(f"\n Taxanomic ID of", {taxIDn})
+            taxID = "txid" + taxIDn  # correct format e.g. txid8782 for Aves
+
+        # Declare protein family
+        pro_input = input("\n Please enter the name of the protein family: ") or "glucose-6-phosphatase"
+
+        # Output file name
+        document_name = f"proto_seq_{taxIDn}"
+
+        # First check how long the desired search is and ask if they would like to continue download sequence
+        print("\n Checking accession count for desired search \n ")
+
+        ## Using the inputed taxanomic group and protin family, search for protein sequences that match these criteria ##
+        print(f"\n Identifying protein sequences that meet the criteria of {tax_input} and {pro_input} \n")
+        while PRetr_function(tax_input, pro_input) == "":
+            pro_input = input(
+                "\n There is not protein sequences meeting these requirments available on the NCBI database, please enter new protein family ") or "glucose-6-phosphatase"
+            # PRetr_function(tax_input, pro_input)
+        else:
+            ACC_count = AL_PRetr_function(tax_input, pro_input)
+            with open(f"{document_name}_ACC.fa", 'w') as i:
+                sys.stdout = i
+                print(ACC_count)
+                sys.stdout = orig_stdout
+            ACC_bash_count = f"wc -l {document_name}_ACC.fa "
+            subprocess.call(ACC_bash_count, shell=True)
+
+            ask_count = input("\n Would you like to continue downloading the fasta sequences ")
+            if YN(ask_count) == True:
+                protein_sequence_output = PRetr_function(tax_input, pro_input)
+                print("\n Extracting protein sequence complete! \n")
+                loop_var = True #Desired outcome achieved, break loop
+
+
+                # Export data to file
+                with open(f"{document_name}.fa", 'w') as i: #File used for further filtering
+                    sys.stdout = i
+                    print(protein_sequence_output)
+                    sys.stdout = orig_stdout
+
+                with open(f"{document_name}_Ori.fa", 'w') as i: # Copy made of the original file
+                    sys.stdout = i
+                    print(protein_sequence_output)
+                    sys.stdout = orig_stdout
+
+            else:
+                print("\n Please re-enter pa:wq
 
