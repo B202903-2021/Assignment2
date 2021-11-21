@@ -529,3 +529,11 @@ if YN(Emboss_YN) == True:
 else:
     print("Commencing next stage")
 
+#plotcon is a represents the similarity of a set of aligned sequences, plot similarity
+#Plotting graph of conservation of protein sequences
+plot_con_command1 = f"plotcon -sequences {document_name}.msf -graph x11 -auto "
+plot_con_command = f"plotcon -sequences {document_name}.msf -graph cps -auto " #Result 0 means no error
+print("Initiating plotcon, protein similarity check")
+subprocess.call(plot_con_command, shell =True)
+subprocess.call(plot_con_command1, shell =True)
+
