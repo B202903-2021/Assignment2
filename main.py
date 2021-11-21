@@ -1,3 +1,41 @@
+i#!/usr/bin/env python3
+#File called main.py
+import sys
+print("\n Imported sys\n")
+import os
+print("\n Imported os\n")
+import shutil
+print("\n Imported shutiln\n")
+
+#Import edirect module
+sys.path.insert(1, os.path.dirname(shutil.which('xtract')))
+import edirect
+print("\n Imported edirect\n")
+import subprocess
+print("\n Imported subprocess\n")
+import re
+
+from PIL import Image
+print("\n Imported Image\n")
+from os.path import exists # Check if the file exists
+print("\n Imported exists from os.path\n")
+import pandas as pd
+print("\n Imported pandas as pd \n")
+
+# global variables
+orig_stdout = sys.stdout
+
+######Tick List
+
+# All functions used at some point, except float check
+#The intial taxanomic search is robust,still somethings we can do
+#Expert mode, manually altering the variables : can break the script
+#Filter: Accesion is currently robust
+#Filter: Min or max is currently robust
+#Greater loop is complete. Restart can occurat each filter level as well as each module
+
+
+
 
 
 #esearch -db protein -query "Aves[organism] AND glucose-6-phosphatase[protein] NOT PARTIAL NOT PREDICTED" |efetch -db protein -format acc > file.txt
@@ -178,5 +216,33 @@ else:
                     sys.stdout = orig_stdout
 
             else:
-                print("\n Please re-enter pa:wq
+                print("\n Please re-enter parameters \n")
+
+print(count_per_species(f"{document_name}.fa"))
+#######################################################################Filtering the protein list down #######################################################################
+
+#create a variable that is passed along the entire filter, ensuring that each section has the same file input
+filter_input = f"{document_name}.fa"
+
+#Filtering functions
+def SeqL_count(document_name): # Calculates the length of each protein sequence
+    protein_name = None
+    l = 0  # set length to 0
+
+    with open(f"{document_name}.fa") as f:
+        for line in f:
+
+            line = line.rstrip()  # Removes any characters at the end of the string
+            if line.startswith('>'):
+                # If we captured one before, print it now
+                if protein_name != None:
+                    print(l, protein_name, sep="\t")
+                    l = 0 #reset the count
+                protein_name = line[1:]
+            else:
+                l += len(line)
+    if l:  # prints the lastseq length
+        print(l, protein_name, sep="\t")# Basically starting after each > if there is a header print, set to 0, then until length of charcters till the next header in which print will activate
+        #Due to the last one not having a header after, it is unable to print thus it has to manually be done
+
 
