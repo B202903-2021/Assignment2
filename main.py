@@ -511,3 +511,21 @@ else:
     subprocess.call(cl_command_phylo, shell = True)
     print("Commencing next stage")
 
+
+###File cleanup from Stage 1
+# Removes all MMM files
+remove_all_MMM = "rm -f *_MMM.fa"
+subprocess.call(remove_all_MMM, shell=True)
+
+#Removes all AF files
+remove_all_AF = "rm -f *_AF.fa"
+subprocess.call(remove_all_AF, shell=True)
+
+###### CHANGE TO FALSE as you want to force them to do this
+Emboss_YN = input("Would you like display basic information on the multiple sequence alignment")
+if YN(Emboss_YN) == True:
+    emboss_align = f"infoalign -auto -sequence {document_name}.msf -outfile ruociCatacylsm.doc "
+    subprocess.call(emboss_align, shell=True)
+else:
+    print("Commencing next stage")
+
