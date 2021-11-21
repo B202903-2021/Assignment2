@@ -1,4 +1,4 @@
-i#!/usr/bin/env python3
+#!/usr/bin/env python3
 #File called main.py
 import sys
 print("\n Imported sys\n")
@@ -245,4 +245,249 @@ def SeqL_count(document_name): # Calculates the length of each protein sequence
         print(l, protein_name, sep="\t")# Basically starting after each > if there is a header print, set to 0, then until length of charcters till the next header in which print will activate
         #Due to the last one not having a header after, it is unable to print thus it has to manually be done
 
+
+############################
+
+# Building blocks for filter commands
+call_pullseq = f"/localdisk/data/BPSM/Assignment2/pullseq -i"
+c = "'>'"
+
+###########################
+
+
+blast_input_SC = count_species(f'{document_name}.fa')
+print(f"\n The number of species within fasta file is {blast_input_SC}\n")
+
+###Let them select which protein sequence to use in the blast
+###Make sure every stage has count the number of species
+greater_loop = True
+pull_seq_ask = input("\n Would you like to filter using pullseq Y/N: \n")
+if YN(pull_seq_ask) == False:
+    greater_loop = False
+while greater_loop == True: # Greater loop that enables a restart of the entire filtering process
+    while YN(pull_seq_ask) == True: # Given that they would like to filter using pullseq, the following will Accesion and min/max filter can be chosen
+
+
+                ################################################################## FILTER 1 : ACCESSION LIST#############################################################
+        # Ask whether they want to specifcy specific accesion names / State the number of species in the file produced for their reference
+        Continue_filter = input("\n Would you like to use accesion filter Y/N: ")
+        if YN(Continue_filter) == False:
+            loop_var = False
+        else:
+            loop_var = True
+        while loop_var == True:  # Allows for restart of the filter process at this stage
+            blastDB_set = True
+            while YN(Continue_filter) == True:
+                gen_blastpAcc = input("\n Would you like to generate a accesion list using blastp Y/N: ")
+                if YN(gen_blastpAcc) == True:
+                    blast_input_SC = count_species(f'{document_name}.fa')
+                    print(f"\n The number of species within fasta file is {blast_input_SC}\n")
+                    blastp_output = input(
+                        "\n Enter blastp output name, cannot have special characters including . : ").replace(" ",
+                                                                                                              "") or "blastp_def"  # Allow them to input file name, or set default file name
+                    print(blastp_output)
+
+                    while Special_check(blastp_output) == True:  # Checks their input for special characters
+                        print("\n The output name given contains special characters! \n")
+                        blastp_output = input(
+                            "\n Enter blastp output name, cannot have special characters including . : \n") or "blastp_def"
+
+                    else:
+                        print("\n File name output is valid, commence blastp\n")
+                        if blastDB_set == True:  # Only when the filter is on its first run as well as on restart will the blastdb be generated
+                            print("\n Generating blast database\n")
+                            make_blastdb = f"makeblastdb -in {document_name}.fa -dbtype prot -out {taxIDn}_db.fa"
+                            subprocess.call(make_blastdb,
+                                            shell=True)  # Generates blastdb based on the file produced from the taxanomic and protein family search / protein database.
+
+                        print("\n\ Loading... \n")
+
+                        blastpAcc = f"blastp -db {taxIDn}_db.fa -query 1.FASTA -outfmt '10 saccver' -out {blastp_output}.fa "  # Command line for blastp the file selected
+                        subprocess.call(blastpAcc, shell=True)
+
+                header_file_input = input(
+                    "Please write the name of the file containing the accesion names: ").strip() or f"{document_name}_ACC.fa"  # create a file containing header names
+                while os.path.exists(
+                        header_file_input) == False:  # Check whether the file exists, if not then make the user input a file until it does
+                    print(f"\n There is no file with {header_file_input}\n")
+                    header_file_input = input("\nPlease input a new file name\n").strip() or "EX.txt"
+                else:
+                    while header_file_input == "":  # Then once the file is known
+                        print("\n No file input \n")
+                    else:
+                        pullseq_names = f"-n {header_file_input}"
+                        filter_accesions_list = f"{call_pullseq} {filter_input} {pullseq_names} > temp.fa && mv temp.fa ProSeq_AF.fa"  # the > temp.fa etc is a trick used to create a file and overwrite the original, pullseq alone cant input and overwrite the same file
+                        print(filter_accesions_list)
+                        subprocess.call(filter_accesions_list, shell=True)
+                        filter_input = "ProSeq_AF.fa"
+                        blast_input_SC = count_species(filter_input)
+                        print(f"\n The number of species within filtered file is {blast_input_SC}\n")
+
+                F_lineC = f"cat {filter_input} | grep -c {c}"
+                print(F_lineC)
+                subprocess.call(F_lineC, shell=True)
+                blastDB_set = False  # Prevents blastdb being generated again unless restart filter
+
+                Continue_filter = input("\n Would you like to continue to use accession list filter Y/N: ")
+
+            else:
+                restart_filter = input("\n Would you like to restart the filtering process Y/N: ")
+                if YN(restart_filter) == False:
+                    break
+                else:
+                    Continue_filter = "y"
+                    filter_input = f"{document_name}.fa"  # Resets the input file back to the original,
+                    blast_input_SC = count_species(
+                        f'{document_name}.fa')  # Makes sure they see the number of species upon restarting the filter process
+                    print(f"\n The number of species within fasta file is {blast_input_SC}\n")
+
+                ##########################################################################################FILTER 2: MIN MAX SEQUENCE LIST##############################################################################
+
+        # Ask whether they would like to specify min or max
+        MMM = input(" Would you like filter based on minium and/or maximum sequence length, type y or n: ")
+        if YN(MMM) == False:
+            loop_varMMM = False
+            pull_seq_ask = 'n'
+        else:
+            loop_varMMM = True
+        filter_input_restart = filter_input
+        # Calculate length of each protein sequence
+        MMM_calculations = False  # Prevents break when not declared
+        if YN(MMM) == True:  # Given that they want to use min and max
+            # Create a file, containing the lengths for each protein sequence
+            with open(f"{document_name}_SL.csv", 'w') as i:
+                sys.stdout = i  # towards file
+                sys.stdout = SeqL_count(document_name)
+                sys.stdout = orig_stdout  # away from file
+            headed_document = pd.read_csv(f"{document_name}_SL.csv", sep="\t", names=['Sequence length',
+                                                                                      'Protein sequence name'])  # Add headers to file of lengths per protein sequence
+            with open(f"{document_name}_SL_headed.csv", 'w') as i:  # Create the headed version as calculations will remove the first line becomes header
+                sys.stdout = i
+                print(headed_document)
+                sys.stdout = orig_stdout
+            # Using the headed version and panada, using column 1, calculate the min, max and mean
+            seq_min = headed_document['Sequence length'].agg('min')
+            seq_max = headed_document['Sequence length'].agg('max')
+            seq_mean = round(headed_document['Sequence length'].agg('mean'))  # Rounded
+            MMM_calculations = True  # makes sure that if the calcualtions for length are not done, mean min and max stages will not occur
+        else:
+            print("Commencing next stage")
+
+        if MMM_calculations == True:
+            # Present a summary of min, max and mean
+            # Ask if they want to see the summary
+            Summary_MMM = input(" Would you like to see a summary of Mean, Min and Max: ")
+            if YN(Summary_MMM) == True:
+                print("\nProtein Sequences: Mean, Min and Max\n")
+                print(f"\nMean: {seq_mean}\n")
+                print(f"\nMin: {seq_min}\n")
+                print(f"\nMax: {seq_max}\n")
+            else:
+                print("Commencing next stage")
+
+            # Ask if they want to see a list of protein sequences with their lengths
+            Seq_per_PS = input(" Would you like to see all protein sequences along with their length: ")
+            if YN(Seq_per_PS) == True:  # Open the headed file to print its content
+                with open(f"{document_name}_SL_headed.csv", 'r') as f:
+                    content = f.read()
+                    print(content)
+            else:
+                print("Commencing next stage")
+
+        print(filter_input)
+        # Given that they would like to use min or max for filter, allow them to specify whether they would like to use min, max or both together
+        while loop_varMMM == True:  # Allows for restart of the filter process at this stage
+            while YN(MMM) == True:
+                ask_min = YN(
+                    input("Would you like to filter based on min sequence length, Y/N : "))  # Ask for min length input
+                ask_max = YN(
+                    input("Would you like to filter based on max sequence length, Y/N : "))  # Ask for max length input
+                if ask_min == True:  # Given that they would like to use min, let them input value
+                    min = input("Please input the minimum sequence length: ").replace(" ",
+                                                                                      "")  # .replace(" ", "") converts all spaces to no spaces, basically removes all possible spaces
+                    while min == "":
+                        print("\n No min input \n")
+                        min = input(" Please input minimum sequence length again: ").replace(" ", "")
+
+                    else:
+                        while Int_check(min) == False:  # Checks whether the min value is a int
+                            print("\n Input was not integer or float \n")
+                            min = input("\n Please enter a integer or a float value: ").replace(" ", "")
+                        else:
+                            print("Minium sequence length inputed into command line")
+                            min_pullseq = f"-m {min}"  # Ensures the command line is created given they fail to input the 1st time
+
+                if ask_max == True:  # Given that they would like to use max, let them input value
+                    max = input("Please input the maximum sequence length: ").replace(" ", "")
+
+                    while max == "":
+                        print("\n No max input: ")
+                        max = input("Please input maximum sequence length again: ").replace(" ", "")
+                    else:
+                        while Int_check(max) == False:  # Checks whether the min value is a int
+                            print("\n Input was not integer\n")
+                            max = input("\n Please enter a integer: ").replace(" ", "")
+                        else:
+                            print("Maximmum sequence length inputed into command line")
+                            max_pullseq = f"-a {max}"  # Ensures the command line is created given they fail to input the 1st time
+
+                if ask_max == True or ask_min == True:  # Given that either min or max has been selected
+
+                    if ask_min == True and ask_max == False:  # Generates command line for min specified
+                        MMM_pullseq = f"{call_pullseq} {filter_input} {min_pullseq}"
+                    if ask_max == True and ask_min == False:  # Generates command line for max specified
+                        MMM_pullseq = f"{call_pullseq} {filter_input} {max_pullseq}"
+                    if ask_min == True and ask_max == True:  # Generates command line for min and max specified
+                        MMM_pullseq = f"{call_pullseq} {filter_input} {min_pullseq} {max_pullseq}"
+                    MMM_pullseq_complete = f"{MMM_pullseq} > temp.fa && mv temp.fa ProSeq_MMM.fa"  # Completes the command line that needs to be run, then as the file cannot overwrite directly, we need to create a temp file to pass the info through
+                    print(MMM_pullseq_complete)
+                    MMM_output = subprocess.call(MMM_pullseq_complete,
+                                                 shell=True)  # Creates a shell to run bash command
+                    filter_input = "ProSeq_MMM.fa"  # Reassigns the most recent file to the variable
+
+                    # Count the number of protein sequences in each file
+                    F_lineC = f"cat {filter_input} | grep -c {c}"
+                    print(F_lineC)
+                    subprocess.call(F_lineC, shell=True)
+
+                    MMM = input(
+                        "\n Would you like to continue to use min/max filter Y/N: ")  # Breaks the loop if N or continues if Y
+
+            else:
+                restart_filter = input("\n Would you like to restart the filtering process Y/N: ")
+                if YN(restart_filter) == False:
+                    pull_seq_ask = 'n'
+                    break
+
+                else:
+                    MMM = "y"
+                    # Deletes variables to ensure restart is clean
+                    #if ask_min == True:
+                        #del min
+                   # if ask_max == True:
+                        #del max
+
+                    filter_input = filter_input_restart  # Resets the input file back to the original,
+                    blast_input_SC = count_species(
+                        f'{document_name}.fa')  # Makes sure they see the number of species upon restarting the filter process
+                    print(f"\n The number of species within fasta file is {blast_input_SC}\n")
+
+    else:
+        restart_filter = input("\n Would you like to restart the filtering process Y/N: ")
+        if os.stat(filter_input).st_size == 0 :
+            print("\n There is no content in the fasta file, please re-do filtering \n")
+            restart_filter = "y"
+        if YN(restart_filter) == False:
+            break
+        else:
+            pull_seq_ask = "y"
+            filter_input = f"{document_name}.fa"  # Resets the input file back to the original,
+            blast_input_SC = count_species(
+                f'{document_name}.fa')  # Makes sure they see the number of species upon restarting the filter process
+            print(f"\n The number of species within fasta file is {blast_input_SC}\n")
+
+
+
+
+:wq
 
