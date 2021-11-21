@@ -537,3 +537,30 @@ print("Initiating plotcon, protein similarity check")
 subprocess.call(plot_con_command, shell =True)
 subprocess.call(plot_con_command1, shell =True)
 
+print("Plotcon file generated!")
+
+#Reorintates the image as the file output is vertical thus correct
+image=Image.open('plotcon.ps')
+Rimage = image.transpose(Image.ROTATE_270)
+Rimage.show()
+
+pscan1 = f"patmatmotifs -full Yes -sequence {document_name}.msf -prune F -outfile 1.doc "
+subprocess.call(pscan1, shell = True)
+
+###################################### Phylogenetic Analysis
+#Takes multi sequence alignment and generates an evolutionary tree that best explains the dataset
+Phylo_Ask = input("\n Would you like to  create an evolutionary tree of the multiple sequence alignment dataset Y/N: \n")
+if YN(Phylo_Ask) == True:
+    iqtree_CL = f"iqtree -s {document_name}.phy -bb 1000"
+    subprocess.call(iqtree_CL, shell=True)
+
+    #Convert the phylo iqtree output file into png
+    iqtree_convert = f"figtree -graphic PNG {document_name}.phy.treefile {document_name}_phylo.png"
+    subprocess.call(iqtree_convert, shell = True)
+else:
+    print("\n Skipped Phylogenetic Analysis \n")
+
+
+
+
+
