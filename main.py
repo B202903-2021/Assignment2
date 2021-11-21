@@ -5,7 +5,7 @@ print("\n Imported sys\n")
 import os
 print("\n Imported os\n")
 import shutil
-print("\n Imported shutiln\n")
+:w::print("\n Imported shutiln\n")
 
 #Import edirect module
 sys.path.insert(1, os.path.dirname(shutil.which('xtract')))
@@ -63,4 +63,48 @@ def PRetr_function(tax_input, pro_input) :
     Accession_input = edirect.execute(f"esearch -db protein -query '{tax_input}[organism] AND {pro_input}[protein] NOT PARTIAL'")
     Accession_list = edirect.execute("efetch -format fasta", Accession_input)  # Download all protein sequence files fasta
     return Accession_list
+
+
+#Retrieve Accesion list for above function
+def AL_PRetr_function(tax_input, pro_input) :
+    Accession_input = edirect.execute(f"esearch -db protein -query '{tax_input}[organism] AND {pro_input}[protein] NOT PARTIAL'")
+    Accession_list = edirect.execute("efetch -format acc", Accession_input)  # Download all protein sequence files fasta
+    return Accession_list
+
+
+#True or False function : If user input y or n
+def YN(YNinput):
+    while "Input is not Y or N":
+        response=str((YNinput+ '(y/n):')).lower().strip()
+        if response[0] =="y":
+            return True
+        if response[0] =="n":
+            return False
+        else :
+            print("\n Cannot interpret \n")
+            response = input("Please retype")
+            return YN(response)
+
+
+#Input check function
+def Special_check(SC_input): # Checks for special characters
+    SC_value = any(not SC.isalnum() for SC in SC_input)
+    if SC_value == True:
+        return True
+    else:
+        return False
+
+
+def Int_check(IC_input) : # Checks for integer
+    if IC_input.isnumeric() == True:
+        return True
+    else:
+        return False
+
+
+def Float_check(IC_input) : #Checks for float
+    if isinstance(IC_input, float) :
+        return True
+    else:
+        return False
 
