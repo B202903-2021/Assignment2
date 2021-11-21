@@ -1,4 +1,5 @@
-n.py
+#!/usr/bin/env python3
+#File called main.py
 import sys
 print("\n Imported sys\n")
 import os
@@ -55,4 +56,11 @@ def taxanomy_function(tax_input):
     taxDRetrieve = edirect.execute("esummary", taxData)  # Make the web data readable
     taxIdentity = edirect.execute("xtract -pattern DocumentSummary -element Id",taxDRetrieve)  # Extract Taxonomy ID from readable data
     return taxIdentity
+
+
+#Creating function to obtain protein sequences that meet the taxanomic and protein requirments
+def PRetr_function(tax_input, pro_input) :
+    Accession_input = edirect.execute(f"esearch -db protein -query '{tax_input}[organism] AND {pro_input}[protein] NOT PARTIAL'")
+    Accession_list = edirect.execute("efetch -format fasta", Accession_input)  # Download all protein sequence files fasta
+    return Accession_list
 
